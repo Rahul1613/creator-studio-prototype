@@ -1536,7 +1536,7 @@ export default function App() {
             </div>
             <div>
               <div style={{ fontWeight: 700, fontSize: 14, color: "#fff" }}>Creator Studio</div>
-              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>25 screens · UI Prototype</div>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>28 screens · UI Prototype</div>
             </div>
           </div>
           {!isWide && (
