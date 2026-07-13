@@ -72,7 +72,17 @@ export default function App() {
   const [userRole, setUserRole] = useState<"business" | "creator" | "user" | "admin">("business");
   const [activeTab, setActiveTab] = useState("home");
   
-  // App States
+  const [isMobile, setIsMobile] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
   const [creators, setCreators] = useState(INITIAL_CREATORS);
   const [requirements, setRequirements] = useState(INITIAL_REQUIREMENTS);
   const [events, setEvents] = useState(INITIAL_EVENTS);
@@ -97,6 +107,7 @@ export default function App() {
   const [selectedCreator, setSelectedCreator] = useState<typeof INITIAL_CREATORS[0] | null>(null);
   const [selectedReq, setSelectedReq] = useState<typeof INITIAL_REQUIREMENTS[0] | null>(null);
   const [selectedDeal, setSelectedDeal] = useState<typeof INITIAL_DEALS[0] | null>(null);
+  const [activeChatUser, setActiveChatUser] = useState<any>(INITIAL_CREATORS[0]);
 
   // Form states
   const [newReqTitle, setNewReqTitle] = useState("");
@@ -485,7 +496,7 @@ export default function App() {
       case "requirement-details":
         if (!selectedReq) return null;
         return (
-          <div style={{ padding: 24, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 24 }}>
+          <div style={{ padding: isMobile ? 12 : 24, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: isMobile ? 12 : 24 }}>
             <div style={{ background: C.card, borderRadius: 16, padding: 20, boxShadow: shadow, display: "flex", flexDirection: "column", gap: 12 }}>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <span style={{ background: C.indigoLight, color: C.indigo, fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 20 }}>{selectedReq.category}</span>
@@ -523,7 +534,7 @@ export default function App() {
       case "creator-profile":
         if (!selectedCreator) return null;
         return (
-          <div style={{ padding: 24, display: "grid", gridTemplateColumns: "1fr 2fr", gap: 24 }}>
+          <div style={{ padding: isMobile ? 16 : 24, display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 2fr", gap: 24 }}>
             <div style={{ background: C.card, borderRadius: 16, padding: 20, boxShadow: shadow, display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 10 }}>
               <img src={selectedCreator.img} style={{ width: 90, height: 90, borderRadius: "50%", border: `3px solid ${roleColor}` }} />
               <div>
@@ -567,43 +578,57 @@ export default function App() {
         );
 
       case "chat":
+        const showList = !isMobile || !activeChatUser;
+        const showDetail = !isMobile || !!activeChatUser;
         return (
-          <div style={{ padding: 24, height: "calc(100vh - 120px)", display: "grid", gridTemplateColumns: "1fr 2fr", gap: 24 }}>
-            <div style={{ background: C.card, borderRadius: 16, overflow: "hidden", border: `1px solid ${C.border}`, display: "flex", flexDirection: "column" }}>
-              <div style={{ padding: 16, borderBottom: `1px solid ${C.border}`, fontWeight: 700, color: C.navy }}>Active Chats</div>
-              <div style={{ flex: 1, overflowY: "auto", padding: 8 }}>
-                {[
-                  { name: "Sophia Martinez", last: "Sounds good! I'll update details.", time: "10:33 AM" },
-                  { name: "Jake Thompson", last: "Send contract proposal", time: "Yesterday" }
-                ].map((c, idx) => (
-                  <div key={idx} style={{ display: "flex", gap: 10, padding: 12, borderRadius: 10, background: idx === 0 ? C.indigoLight : "transparent", cursor: "pointer" }}>
-                    <img src={INITIAL_CREATORS[idx].img} style={{ width: 38, height: 38, borderRadius: "50%" }} />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</div>
-                      <div style={{ fontSize: 11, color: C.muted }} numberOfLines={1}>{c.last}</div>
+          <div style={{ padding: isMobile ? 12 : 24, height: "calc(100vh - 80px)", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 2fr", gap: isMobile ? 12 : 24 }}>
+            {showList && (
+              <div style={{ background: C.card, borderRadius: 16, overflow: "hidden", border: `1px solid ${C.border}`, display: "flex", flexDirection: "column" }}>
+                <div style={{ padding: 16, borderBottom: `1px solid ${C.border}`, fontWeight: 700, color: C.navy }}>Active Chats</div>
+                <div style={{ flex: 1, overflowY: "auto", padding: 8 }}>
+                  {[
+                    { name: "Sophia Martinez", last: "Sounds good! I'll update details.", time: "10:33 AM", user: INITIAL_CREATORS[0] },
+                    { name: "Jake Thompson", last: "Send contract proposal", time: "Yesterday", user: INITIAL_CREATORS[1] }
+                  ].map((c, idx) => (
+                    <div key={idx} onClick={() => setActiveChatUser(c.user)} style={{ display: "flex", gap: 10, padding: 12, borderRadius: 10, background: activeChatUser?.id === c.user.id ? C.indigoLight : "transparent", cursor: "pointer" }}>
+                      <img src={c.user.img} style={{ width: 38, height: 38, borderRadius: "50%" }} />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</div>
+                        <div style={{ fontSize: 11, color: C.muted }}>{c.last}</div>
+                      </div>
+                      <span style={{ fontSize: 10, color: C.muted }}>{c.time}</span>
                     </div>
-                    <span style={{ fontSize: 10, color: C.muted }}>{c.time}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {showDetail && activeChatUser && (
+              <div style={{ background: C.card, borderRadius: 16, overflow: "hidden", border: `1px solid ${C.border}`, display: "flex", flexDirection: "column" }}>
+                <div style={{ padding: 16, borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    {isMobile && (
+                      <button onClick={() => setActiveChatUser(null)} style={{ background: "none", border: "none", cursor: "pointer", display: "flex" }}>
+                        <ChevronLeft size={20} color={C.navy} />
+                      </button>
+                    )}
+                    <img src={activeChatUser.img} style={{ width: 32, height: 32, borderRadius: "50%" }} />
+                    <div style={{ fontWeight: 700, color: C.navy }}>{activeChatUser.name}</div>
                   </div>
-                ))}
+                  <button onClick={() => setActiveTab("agreement")} style={{ background: C.indigo, color: "#fff", border: "none", borderRadius: 8, padding: "6px 12px", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Create Proposal</button>
+                </div>
+                <div style={{ flex: 1, overflowY: "auto", padding: 20, display: "flex", flexDirection: "column", gap: 12 }}>
+                  {chatMessages.map((m, idx) => (
+                    <div key={idx} style={{ display: "flex", justifyContent: m.sender === "me" ? "flex-end" : "flex-start" }}>
+                      <div style={{ background: m.sender === "me" ? roleColor : C.bg, color: m.sender === "me" ? "#fff" : C.navy, borderRadius: 12, padding: "10px 14px", fontSize: 13, maxWidth: 360 }}>{m.text}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ padding: 14, borderTop: `1px solid ${C.border}`, display: "flex", gap: 10 }}>
+                  <input placeholder="Type your message..." style={{ flex: 1, background: C.bg, borderRadius: 20, paddingLeft: 16, paddingRight: 16, border: "none", outline: "none", fontSize: 13 }} value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === "Enter" && handleSendMessage()} />
+                  <button onClick={handleSendMessage} style={{ width: 38, height: 38, borderRadius: "50%", background: roleColor, border: "none", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}><Send size={16} /></button>
+                </div>
               </div>
-            </div>
-            <div style={{ background: C.card, borderRadius: 16, overflow: "hidden", border: `1px solid ${C.border}`, display: "flex", flexDirection: "column" }}>
-              <div style={{ padding: 16, borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div style={{ fontWeight: 700, color: C.navy }}>Sophia Martinez</div>
-                <button onClick={() => setActiveTab("agreement")} style={{ background: C.indigo, color: "#fff", border: "none", borderRadius: 8, padding: "6px 12px", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Create Contract Proposal</button>
-              </div>
-              <div style={{ flex: 1, overflowY: "auto", padding: 20, display: "flex", flexDirection: "column", gap: 12 }}>
-                {chatMessages.map((m, idx) => (
-                  <div key={idx} style={{ display: "flex", justifyContent: m.sender === "me" ? "flex-end" : "flex-start" }}>
-                    <div style={{ background: m.sender === "me" ? roleColor : C.bg, color: m.sender === "me" ? "#fff" : C.navy, borderRadius: 12, padding: "10px 14px", fontSize: 13, maxWidth: 360 }}>{m.text}</div>
-                  </div>
-                ))}
-              </div>
-              <div style={{ padding: 14, borderTop: `1px solid ${C.border}`, display: "flex", gap: 10 }}>
-                <input placeholder="Type your message..." style={{ flex: 1, background: C.bg, borderRadius: 20, paddingHorizontal: 16, border: "none", outline: "none", fontSize: 13 }} value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === "Enter" && handleSendMessage()} />
-                <button onClick={handleSendMessage} style={{ width: 38, height: 38, borderRadius: "50%", background: roleColor, border: "none", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}><Send size={16} /></button>
-              </div>
-            </div>
+            )}
           </div>
         );
 
@@ -704,7 +729,7 @@ export default function App() {
                 </div>
               </div>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 24 }}>
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "2fr 1fr", gap: isMobile ? 16 : 24 }}>
               <div style={{ background: C.card, borderRadius: 16, padding: 20, boxShadow: shadow }}>
                 <TextTitle>Earnings Over 6 Months</TextTitle>
                 <div style={{ height: 220, marginTop: 14 }}>
@@ -774,7 +799,7 @@ export default function App() {
 
       case "support":
         return (
-          <div style={{ padding: 24, display: "grid", gridTemplateColumns: "1fr 1.5fr", gap: 24 }}>
+          <div style={{ padding: isMobile ? 16 : 24, display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1.5fr", gap: 24 }}>
             <div style={{ background: C.card, borderRadius: 16, padding: 20, boxShadow: shadow }}>
               <TextTitle>Submit Ticket</TextTitle>
               {supportSent ? (
@@ -889,10 +914,12 @@ export default function App() {
     const slide = onboardingData[onboardingIndex];
     return (
       <div style={{ height: "100vh", background: C.bg, display: "flex", flexWrap: "wrap", overflow: "hidden" }}>
-        <div style={{ flex: 1, minWidth: 320, background: C.navy, display: "flex", alignItems: "center", justifyContent: "center", padding: 40, flexDirection: "column" }}>
-          <img src={slide.img} style={{ width: "80%", maxHeight: 300, objectFit: "cover", borderRadius: 16 }} />
-        </div>
-        <div style={{ flex: 1, minWidth: 320, padding: 40, display: "flex", flexDirection: "column", justifyContent: "center", background: "#fff" }}>
+        {!isMobile && (
+          <div style={{ flex: 1, minWidth: 320, background: C.navy, display: "flex", alignItems: "center", justifyContent: "center", padding: 40, flexDirection: "column" }}>
+            <img src={slide.img} style={{ width: "80%", maxHeight: 300, objectFit: "cover", borderRadius: 16 }} />
+          </div>
+        )}
+        <div style={{ flex: 1, minWidth: 320, padding: isMobile ? 24 : 40, display: "flex", flexDirection: "column", justifyContent: "center", background: "#fff" }}>
           <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
             {[0, 1, 2].map(idx => (
               <div key={idx} style={{ height: 4, width: idx === onboardingIndex ? 24 : 8, borderRadius: 2, background: idx === onboardingIndex ? C.indigo : C.border }} />
@@ -912,12 +939,14 @@ export default function App() {
   if (authStep === "chooseAccount") {
     return (
       <div style={{ height: "100vh", background: C.bg, display: "flex", flexWrap: "wrap", overflow: "hidden" }}>
-        <div style={{ flex: 1, minWidth: 320, background: C.navy, display: "flex", flexDirection: "column", justifyContent: "center", padding: 40, color: "#fff" }}>
-          <div style={{ width: 44, height: 44, background: C.indigo, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}><Zap size={22} color="#fff" /></div>
-          <div style={{ fontSize: 32, fontWeight: 800 }}>Join the Marketplace</div>
-          <div style={{ fontSize: 15, color: "rgba(255,255,255,0.6)", marginTop: 8, lineHeight: 1.6 }}>Select your profile role. We support brands wishing to hire creators, influencers looking for collabs, and event promoters seeking local outreach.</div>
-        </div>
-        <div style={{ flex: 1, minWidth: 320, padding: 40, display: "flex", flexDirection: "column", justifyContent: "center", background: "#fff" }}>
+        {!isMobile && (
+          <div style={{ flex: 1, minWidth: 320, background: C.navy, display: "flex", flexDirection: "column", justifyContent: "center", padding: 40, color: "#fff" }}>
+            <div style={{ width: 44, height: 44, background: C.indigo, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}><Zap size={22} color="#fff" /></div>
+            <div style={{ fontSize: 32, fontWeight: 800 }}>Join the Marketplace</div>
+            <div style={{ fontSize: 15, color: "rgba(255,255,255,0.6)", marginTop: 8, lineHeight: 1.6 }}>Select your profile role. We support brands wishing to hire creators, influencers looking for collabs, and event promoters seeking local outreach.</div>
+          </div>
+        )}
+        <div style={{ flex: 1, minWidth: 320, padding: isMobile ? 24 : 40, display: "flex", flexDirection: "column", justifyContent: "center", background: "#fff" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {[
               { id: "business", title: "Business / Brand", desc: "Post campaign requirements, view details, fund milestones.", icon: Briefcase, color: C.indigo },
@@ -942,11 +971,13 @@ export default function App() {
   if (authStep === "signup" || authStep === "login") {
     return (
       <div style={{ height: "100vh", background: C.bg, display: "flex", flexWrap: "wrap", overflow: "hidden" }}>
-        <div style={{ flex: 1, minWidth: 320, background: C.navy, display: "flex", flexDirection: "column", justifyContent: "center", padding: 40, color: "#fff" }}>
-          <div style={{ fontSize: 32, fontWeight: 800 }}>{authStep === "signup" ? `Create ${userRole.toUpperCase()} Account` : "Welcome back"}</div>
-          <div style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", marginTop: 8 }}>Join the premium Indian influencer & local fest marketplace. Secure escrow protected payments on all milestones.</div>
-        </div>
-        <div style={{ flex: 1, minWidth: 320, padding: 40, display: "flex", flexDirection: "column", justifyContent: "center", background: "#fff" }}>
+        {!isMobile && (
+          <div style={{ flex: 1, minWidth: 320, background: C.navy, display: "flex", flexDirection: "column", justifyContent: "center", padding: 40, color: "#fff" }}>
+            <div style={{ fontSize: 32, fontWeight: 800 }}>{authStep === "signup" ? `Create ${userRole.toUpperCase()} Account` : "Welcome back"}</div>
+            <div style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", marginTop: 8 }}>Join the premium Indian influencer & local fest marketplace. Secure escrow protected payments on all milestones.</div>
+          </div>
+        )}
+        <div style={{ flex: 1, minWidth: 320, padding: isMobile ? 24 : 40, display: "flex", flexDirection: "column", justifyContent: "center", background: "#fff" }}>
           {authStep === "signup" ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <InputField label="Name" placeholder="Enter full name" />
@@ -968,16 +999,21 @@ export default function App() {
     );
   }
 
-  // ── AUTHENTICATED WEB APP DASHBOARD LAYOUT ─────────────────────
-  return (
-    <div style={{ height: "100vh", display: "flex", background: C.bg, fontFamily: "Inter, sans-serif", overflow: "hidden" }}>
-      {/* Left Sidebar */}
-      <div style={{ width: 240, background: C.navy, display: "flex", flexDirection: "column", flexShrink: 0 }}>
-        <div style={{ padding: "20px 24px", borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", gap: 10, alignItems: "center" }}>
-          <div style={{ width: 32, height: 32, background: roleColor, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Zap size={16} color="#fff" fill="#fff" />
+  const renderSidebar = () => {
+    const content = (
+      <div style={{ width: 240, background: C.navy, display: "flex", flexDirection: "column", height: "100%" }}>
+        <div style={{ padding: "20px 24px", borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", gap: 10, alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <div style={{ width: 32, height: 32, background: roleColor, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Zap size={16} color="#fff" fill="#fff" />
+            </div>
+            <span style={{ color: "#fff", fontWeight: 800, fontSize: 16 }}>Creator Studio</span>
           </div>
-          <span style={{ color: "#fff", fontWeight: 800, fontSize: 16 }}>Creator Studio</span>
+          {isMobile && (
+            <button onClick={() => setSidebarOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#fff", display: "flex" }}>
+              <X size={18} />
+            </button>
+          )}
         </div>
         <div style={{ flex: 1, padding: 14, display: "flex", flexDirection: "column", gap: 4, overflowY: "auto" }}>
           {[
@@ -992,21 +1028,47 @@ export default function App() {
             { id: "support", label: "Help & FAQs", icon: HelpIcon, roles: ["business", "creator", "user"] },
             { id: "settings", label: "Settings", icon: Settings, roles: ["business", "creator", "user", "admin"] }
           ].filter(item => item.roles.includes(userRole)).map(item => (
-            <button key={item.id} onClick={() => setActiveTab(item.id)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 8, border: "none", cursor: "pointer", background: activeTab === item.id ? "rgba(255,255,255,0.08)" : "transparent", color: activeTab === item.id ? "#fff" : "rgba(255,255,255,0.5)", width: "100%", textAlign: "left", fontSize: 13, fontWeight: activeTab === item.id ? 700 : 500 }}>
+            <button key={item.id} onClick={() => { setActiveTab(item.id); if (isMobile) setSidebarOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 8, border: "none", cursor: "pointer", background: activeTab === item.id ? "rgba(255,255,255,0.08)" : "transparent", color: activeTab === item.id ? "#fff" : "rgba(255,255,255,0.5)", width: "100%", textAlign: "left", fontSize: 13, fontWeight: activeTab === item.id ? 700 : 500 }}>
               <item.icon size={16} color={activeTab === item.id ? "#fff" : "rgba(255,255,255,0.4)"} />
               {item.label}
             </button>
           ))}
         </div>
       </div>
+    );
+
+    if (isMobile) {
+      if (!sidebarOpen) return null;
+      return (
+        <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex" }}>
+          <div onClick={() => setSidebarOpen(false)} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)" }} />
+          <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, zIndex: 1001 }}>
+            {content}
+          </div>
+        </div>
+      );
+    }
+
+    return content;
+  };
+
+  // ── AUTHENTICATED WEB APP DASHBOARD LAYOUT ─────────────────────
+  return (
+    <div style={{ height: "100vh", display: "flex", background: C.bg, fontFamily: "Inter, sans-serif", overflow: "hidden", position: "relative" }}>
+      {renderSidebar()}
 
       {/* Main Container */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
         {/* Top Header */}
-        <div style={{ height: 64, background: C.card, borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", justifyBetween: "space-between", paddingHorizontal: 24, padding: "0 24px", justifyContent: "space-between", flexShrink: 0 }}>
+        <div style={{ height: 64, background: C.card, borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", justifyBetween: "space-between", paddingHorizontal: isMobile ? 12 : 24, padding: isMobile ? "0 12px" : "0 24px", justifyContent: "space-between", flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            {isMobile && (
+              <button onClick={() => setSidebarOpen(true)} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", paddingRight: 4 }}>
+                <BarChart2 size={20} color={C.navy} style={{ transform: "rotate(90deg)" }} />
+              </button>
+            )}
             {/* Quick switcher for mock previewing roles */}
-            <span style={{ fontSize: 12, fontWeight: 700, color: C.muted }}>Role View:</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: C.muted, display: isMobile ? "none" : "inline" }}>Role View:</span>
             <select style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8, padding: "6px 12px", fontSize: 12, fontWeight: 700, color: roleColor }} value={userRole} onChange={e => { setUserRole(e.target.value as any); setActiveTab("home"); }}>
               <option value="business">Business / Brand</option>
               <option value="creator">Influencer / Creator</option>
