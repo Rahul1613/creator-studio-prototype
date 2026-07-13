@@ -659,7 +659,7 @@ export default function App() {
               </div>
               <div style={{ fontWeight: 800, fontSize: 20 }}>Escrow Funded!</div>
               <div style={{ fontSize: 13, color: C.muted }}>₹35,000 payment was processed securely. Funds are safely locked in Creator Studio Escrow.</div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, width: "100%", paddingVertical: 12, marginVertical: 8 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, width: "100%", paddingTop: 12, paddingBottom: 12, marginTop: 8, marginBottom: 8 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}><span style={{ color: C.muted }}>Amount</span><span style={{ fontWeight: 600 }}>₹35,000</span></div>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}><span style={{ color: C.muted }}>Milestone</span><span style={{ fontWeight: 600 }}>Escrow Vault</span></div>
               </div>
@@ -1060,7 +1060,7 @@ export default function App() {
       {/* Main Container */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
         {/* Top Header */}
-        <div style={{ height: 64, background: C.card, borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", justifyBetween: "space-between", paddingHorizontal: isMobile ? 12 : 24, padding: isMobile ? "0 12px" : "0 24px", justifyContent: "space-between", flexShrink: 0 }}>
+        <div style={{ height: 64, background: C.card, borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", padding: isMobile ? "0 12px" : "0 24px", justifyContent: "space-between", flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             {isMobile && (
               <button onClick={() => setSidebarOpen(true)} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", paddingRight: 4 }}>
